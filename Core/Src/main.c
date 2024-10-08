@@ -110,7 +110,7 @@ int main(void)
 
 
 	  int i;
-	  while (i<500)
+	  while (i<300)
 	  {
 		  i+=1;
 		  HAL_Delay(1);
