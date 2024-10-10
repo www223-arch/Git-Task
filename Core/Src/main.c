@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "can.h"
 #include "dma.h"
 #include "i2c.h"
@@ -38,7 +39,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
- uint8_t rxbuff[1000];
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,6 +55,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -97,14 +99,16 @@ int main(void)
   MX_I2C1_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-can1_init();
-can2_init();
 
-
-CAN_TxHeaderTypeDef TxMessage;
 //CAN1_Send_Test( TxMessage);
   /* USER CODE END 2 */
 
+  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+
+  /* Start scheduler */
+  osKernelStart();
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -114,13 +118,6 @@ CAN_TxHeaderTypeDef TxMessage;
 
 	 // HAL_UARTEx_ReceiveToIdle_IT(&huart6,rxbuff,100); 
  
-	  CAN2_Send_Test( TxMessage);
-	    HAL_Delay(1000);
-	  CAN1_Send_Test( TxMessage);
-	//  CAN2_Send_Test( TxMessage);
-	  
-	  HAL_Delay(1000);
-
 
     /* USER CODE END WHILE */
 
@@ -173,43 +170,42 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
  
- uint8_t date_CAN1[8];//设为全局变量，用于接收CAN1数据
- uint8_t date_CAN2[8];//设为全局变量，用于接收CAN2数据
- 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-	if(hcan->Instance ==CAN1)
-	{
-	  CAN_RxHeaderTypeDef RxHeader;  //创建接收报文结构体，只声明不配置
-	  HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, date_CAN1); //接收，CAN邮箱为0
-	  HAL_UART_Transmit_DMA(&huart6,(uint8_t *)(date_CAN1),4);
-		
-	 
-	}
-	 if(hcan->Instance == CAN2)
-	{
-	  CAN_RxHeaderTypeDef RxHeader;  //创建接收报文结构体，只声明不配置
-	  HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &RxHeader, date_CAN2); //接收，CAN邮箱为0
-		  HAL_UART_Transmit_DMA(&huart6,(uint8_t *)(date_CAN2),4);
-		
-	}
-}
 
 
+//void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)//空闲中断回调函数
+//{    
 
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)//空闲中断回调函数
-{    
+//		   
+//		
+//	HAL_UART_Transmit_DMA(&huart6,(uint8_t *)(rxbuff),Size);
+//		
+//	
 
-		   
-		
-	HAL_UART_Transmit_DMA(&huart6,(uint8_t *)(rxbuff),Size);
-		
-	
-
-	HAL_UARTEx_ReceiveToIdle_IT(&huart6,rxbuff,100);      
-}
+//	HAL_UARTEx_ReceiveToIdle_IT(&huart6,rxbuff,100);      
+//}
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM12 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM12) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
