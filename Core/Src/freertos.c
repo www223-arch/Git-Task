@@ -116,15 +116,15 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of pwm_Task */
-  osThreadDef(pwm_Task, pwm_task, osPriorityNormal, 0, 128);
+  osThreadDef(pwm_Task, pwm_task, osPriorityNormal, 0, 128);  //pwm任务
   pwm_TaskHandle = osThreadCreate(osThread(pwm_Task), NULL);
 
   /* definition and creation of DJI_send_task */
-  osThreadDef(DJI_send_task, DJI_send, osPriorityIdle, 0, 128);
+  osThreadDef(DJI_send_task, DJI_send, osPriorityIdle, 0, 128);  //DJI报文发送任务
   DJI_send_taskHandle = osThreadCreate(osThread(DJI_send_task), NULL);
 
   /* definition and creation of serial_send_tas */
-  osThreadDef(serial_send_tas, serial_send, osPriorityIdle, 0, 128);
+  osThreadDef(serial_send_tas, serial_send, osPriorityIdle, 0, 128);  //串口发送任务
   serial_send_tasHandle = osThreadCreate(osThread(serial_send_tas), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -144,30 +144,22 @@ void pwm_task(void const * argument)
 {
   /* USER CODE BEGIN pwm_task */
 	
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
-		
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
+
+	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2); //使能定时器2通道2
+
   /* Infinite loop */
   for(;;)
   {
+	  //占空比循环变化
+	  for(int i =0;i<20;i++)
+	  {
+		  
+      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, i*10); 
+  	  
+	osDelay(3);	  
+	  }
 	  
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_1, 150); 
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_2, 150);
-	  __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_3, 150); 
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_4, 150);
-	  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 150); 	  
-	  
-	  
-    osDelay(1);
+
   }
   /* USER CODE END pwm_task */
 }
@@ -179,7 +171,7 @@ void pwm_task(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_DJI_send */
-void DJI_send(void const * argument)
+void DJI_send(void const * argument) //can发送报文数据"10000"控制电压
 {
   /* USER CODE BEGIN DJI_send */
 	CAN_TxHeaderTypeDef TxMessage;
@@ -199,13 +191,13 @@ void DJI_send(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_serial_send */
-void serial_send(void const * argument)
+void serial_send(void const * argument)//串口发送数据包“wl”
 {
   /* USER CODE BEGIN serial_send */
   /* Infinite loop */
   for(;;)
   {
-	  printf("%s\n","wl");
+	  printf("%s","wl");
 	  
     osDelay(1);
   }
