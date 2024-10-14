@@ -24,9 +24,7 @@ typedef struct  //定义收电机信息的结构体
  
 
 /* 函数声明 */
-void  can2_init(void);
+
 void  can1_init(void);
 void CAN1_Send_Test( CAN_TxHeaderTypeDef TxMessage,uint16_t data );
-void CAN2_Send_Test( CAN_TxHeaderTypeDef TxMessage );
-
 #endif

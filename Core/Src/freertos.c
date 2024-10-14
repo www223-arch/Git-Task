@@ -50,25 +50,26 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+
 extern  moto_info_t  motor_yaw_info; //收反馈报文结构体
+uint8_t data[1000];//串口数据
+CAN_TxHeaderTypeDef TxMessage;//发送报文结构体
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-osThreadId pwm_TaskHandle;
-osThreadId DJI_send_taskHandle;
-osThreadId serial_send_tasHandle;
+osThreadId dji_TaskHandle;
+
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
 /* USER CODE END FunctionPrototypes */
 
-void pwm_task(void const * argument);
-void DJI_send(void const * argument);
-void serial_send(void const * argument);
+void dji_task(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -115,17 +116,9 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of pwm_Task */
-  osThreadDef(pwm_Task, pwm_task, osPriorityNormal, 0, 128);
-  pwm_TaskHandle = osThreadCreate(osThread(pwm_Task), NULL);
-
-  /* definition and creation of DJI_send_task */
-  osThreadDef(DJI_send_task, DJI_send, osPriorityIdle, 0, 128);
-  DJI_send_taskHandle = osThreadCreate(osThread(DJI_send_task), NULL);
-
-  /* definition and creation of serial_send_tas */
-  osThreadDef(serial_send_tas, serial_send, osPriorityIdle, 0, 128);
-  serial_send_tasHandle = osThreadCreate(osThread(serial_send_tas), NULL);
+  /* definition and creation of dji_Task */
+  osThreadDef(dji_Task, dji_task, osPriorityNormal, 0, 128);
+  dji_TaskHandle = osThreadCreate(osThread(dji_Task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -133,88 +126,78 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_pwm_task */
+/* USER CODE BEGIN Header_dji_task */
 /**
-  * @brief  Function implementing the pwm_Task thread.
+  * @brief  Function implementing the dji_Task thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_pwm_task */
-void pwm_task(void const * argument)
+/* USER CODE END Header_dji_task */
+void dji_task(void const * argument)
 {
-  /* USER CODE BEGIN pwm_task */
+  /* USER CODE BEGIN dji_task */
 	
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_3);
-	 HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_4);
-		
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
-	 HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
+	can1_init();//can1初始化
+	
   /* Infinite loop */
   for(;;)
   {
+	  CAN1_Send_Test(TxMessage,1000);//发送控制电压
 	  
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_1, 150); 
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_2, 150);
-	  __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_3, 150); 
-	   __HAL_TIM_SetCompare(&htim3, TIM_CHANNEL_4, 150);
-	  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, 150); 
-      __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_4, 150); 	  
-	  
-	  
-    osDelay(1);
+     osDelay(1);
   }
-  /* USER CODE END pwm_task */
-}
-
-/* USER CODE BEGIN Header_DJI_send */
-/**
-* @brief Function implementing the DJI_send_task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_DJI_send */
-void DJI_send(void const * argument)
-{
-  /* USER CODE BEGIN DJI_send */
-	CAN_TxHeaderTypeDef TxMessage;
-  /* Infinite loop */
-  for(;;)
-  {
-	CAN1_Send_Test(TxMessage,10000);
-    osDelay(1);
-  }
-  /* USER CODE END DJI_send */
-}
-
-/* USER CODE BEGIN Header_serial_send */
-/**
-* @brief Function implementing the serial_send_tas thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_serial_send */
-void serial_send(void const * argument)
-{
-  /* USER CODE BEGIN serial_send */
-  /* Infinite loop */
-  for(;;)
-  {
-	  printf("%s\n","wl");
-	  
-    osDelay(1);
-  }
-  /* USER CODE END serial_send */
+  /* USER CODE END dji_task */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
+ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)//can接收回调函数
+ {
+		uint8_t date_CAN1[8];//用于接收CAN1数据
+	//	uint8_t date_CAN2[8];//用于接收CAN2数据
+		
+	
+	if(hcan->Instance ==CAN1)
+	{
+		CAN_RxHeaderTypeDef RxHeader;  //创建接收报文结构体，只声明不配置
+		HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, date_CAN1); //接收，CAN邮箱为0
 
+		switch(RxHeader.StdId)
+		{
+	  case 0x205:
+	{
+    motor_yaw_info.rotor_angle    = ((date_CAN1[0] << 8) | date_CAN1[1]);
+    motor_yaw_info.rotor_speed    = ((date_CAN1[2] << 8) | date_CAN1[3]);
+    motor_yaw_info.torque_current = ((date_CAN1[4] << 8) | date_CAN1[5]);
+    motor_yaw_info.temp           =   date_CAN1[6];
+		break;	
+	}
+	
+        }
+	
+    }
+	
+	else	if(hcan->Instance ==CAN2)
+	{
+		
+	}
+ 
+ 
+ }
+ 
+ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)//空闲中断回调函数
+{    
+
+		     
+
+		
+	HAL_UART_Transmit_DMA(&huart6,(uint8_t *)(data),Size);
+		
+	
+   
+
+	HAL_UARTEx_ReceiveToIdle_IT(&huart6,data,100); 
+}
 
 /* USER CODE END Application */

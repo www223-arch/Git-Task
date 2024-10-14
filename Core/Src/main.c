@@ -75,9 +75,9 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-extern  moto_info_t  motor_yaw_info; //收反馈报文结构体
 
-		
+
+
 		
 		
 // CAN_TxHeaderTypeDef TxMessage;
@@ -120,17 +120,8 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-    MX_GPIO_Init();
-    MX_DMA_Init();
-    MX_CAN1_Init();
-    MX_CAN2_Init();
-    MX_I2C1_Init();
-    MX_USART6_UART_Init();
-	
-	can1_init();
-	
-	//HAL_UARTEx_ReceiveToIdle_IT(&huart6,data,100); 
 
+	
 
 	
 	
@@ -148,6 +139,7 @@ int main(void)
   while (1)
   {
 
+	  
 	  
 
 	  
@@ -207,39 +199,7 @@ void SystemClock_Config(void)
 
 
 
- void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)//can接收回调函数
- {
-		uint8_t date_CAN1[8];//用于接收CAN1数据
-	//	uint8_t date_CAN2[8];//用于接收CAN2数据
-		
-	
-	if(hcan->Instance ==CAN1)
-	{
-		CAN_RxHeaderTypeDef RxHeader;  //创建接收报文结构体，只声明不配置
-		HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, date_CAN1); //接收，CAN邮箱为0
 
-		switch(RxHeader.StdId)
-		{
-	  case 0x205:
-	{
-    motor_yaw_info.rotor_angle    = ((date_CAN1[0] << 8) | date_CAN1[1]);
-    motor_yaw_info.rotor_speed    = ((date_CAN1[2] << 8) | date_CAN1[3]);
-    motor_yaw_info.torque_current = ((date_CAN1[4] << 8) | date_CAN1[5]);
-    motor_yaw_info.temp           =   date_CAN1[6];
-		break;	
-	}
-	
-        }
-	
-    }
-	
-	else	if(hcan->Instance ==CAN2)
-	{
-		
-	}
- 
- 
- }
 
 
 /* USER CODE END 4 */
