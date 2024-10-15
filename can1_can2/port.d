@@ -1,0 +1,12 @@
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+can1_can2\port.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stddef.h
+can1_can2\port.o: D:\Keil5\ARM\ARMCC\Bin\..\include\stdint.h
+can1_can2\port.o: ../Core/Inc/FreeRTOSConfig.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+can1_can2\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
